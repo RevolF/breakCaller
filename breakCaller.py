@@ -102,7 +102,7 @@ parser.add_option(
 	'-R',
 	'--r-script',
 	dest='rscrpt',
-	help='candidate r filtration script, default: /home/ljzhang/project/dmd_breakpoint_caller_v1.05.R',
+	help='candidate r filtration script, default: /home/ljzhang/project/breakCaller.R',
 	default='/home/ljzhang/project/dmd_breakpoint_caller_v1.05.R'
 	)
 	
