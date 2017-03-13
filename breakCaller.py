@@ -45,7 +45,10 @@ Created on Wed Nov 23 11:23:11 2016
 # 	use apply_async instead of map
 # 	use int cpuNbrs
 #	try writing error info to a error log
+# 20170313 modification:
+# 	change error log to stdout
 #==============================================================================
+
 
 from __future__ import division
 import shutil
@@ -102,7 +105,7 @@ parser.add_option(
 	'-R',
 	'--r-script',
 	dest='rscrpt',
-	help='candidate r filtration script, default: /home/ljzhang/project/breakCaller.R',
+	help='candidate r filtration script, default: /home/ljzhang/project/dmd_breakpoint_caller_v1.05.R',
 	default='/home/ljzhang/project/dmd_breakpoint_caller_v1.05.R'
 	)
 	
@@ -127,14 +130,6 @@ parser.add_option(
 	dest='rep',
 	help='reprocessing soft-clipping procedure,1: ture 0: false, default set to true',
 	default='1'
-	)
-	
-parser.add_option(
-	'-O',
-	'--error-log',
-	dest='errorLog',
-	help='error log using for storing error info',
-	default='error_log.out'
 	)
 
 (options,args)=parser.parse_args()
@@ -176,8 +171,10 @@ def main():
 	return
 	
 def mainExc(filename,rawdirMe,workdirMe,fadirMe,chrxfaMe):
-	## prepare for sorted.chrX.sam and DMD depth file
-	# global rawdirMe,workdirMe,fadirMe
+	'''
+	prepare for sorted.chrX.sam and DMD depth file
+	global rawdirMe,workdirMe,fadirMe
+	'''
 	print('mainExc STARTS')
 	
 	os.chdir(rawdirMe)
@@ -366,15 +363,13 @@ def mainExc(filename,rawdirMe,workdirMe,fadirMe,chrxfaMe):
 	
 
 def getSoftclipStats(samfileGss,workdirGss):
-	
-	# generate .sft.statistics files
-	
-#	global rawdir,workdir,fadir
-	
+	'''
+	generate .sft.statistics files
+	'''
 	os.chdir(workdirGss)
 	
 	###################################
-	# re compilation begin here #######
+	#### re compilation begin here ####
 	softre=re.compile(r'.*?(\d+)S.*?')											# soft number
 	insre=re.compile(r'.*?(\d+)I.*?')											# insertion number
 	matre=re.compile(r'.*?(\d+)M.*?')											# match number
@@ -382,8 +377,8 @@ def getSoftclipStats(samfileGss,workdirGss):
 	mismre=re.compile(r'.*?(\d+)X.*?')											# mismatch number
 	mat2re=re.compile(r'.*?(\d+)=.*?')											# type 2 match number
 	
-	softreb=re.compile(r'^(\d+)S')											# soft beginning
-	softree=re.compile(r'(\d+)S$')											# soft ending
+	softreb=re.compile(r'^(\d+)S')												# soft beginning
+	softree=re.compile(r'(\d+)S$')												# soft ending
 	###################################
 	
 	samfiled=workdirGss+"/"+samfileGss
@@ -394,7 +389,6 @@ def getSoftclipStats(samfileGss,workdirGss):
 	samin=open(samfiled,'r')
 	
 	for line in samin.xreadlines():
-		
 		infoar=line.strip().split('\t')
 		# if infoar[4] > qualthres:
 		# mapping quality could be present for it would filter out mappings
@@ -442,7 +436,6 @@ def getSoftclipStats(samfileGss,workdirGss):
 			stsout.write("NA\t-\t")
 			
 		# soft clipping in ending
-		
 		if softenar:
 			stsout.write(str(round(100*int(softenar[0])/totalnbr,3))+"\t")
 			stsout.write(infoar[9][-int(softenar[-1]):]+"\n")
@@ -454,12 +447,9 @@ def getSoftclipStats(samfileGss,workdirGss):
 	return
 
 def reTmap(stsfile,chrxfaRt,workdirRt):
-	
-	# recieve .sft.statistics and generate tmp fa files for retmapping
-	# generate
-	
-#	global chrxfaRt,workdirRt
-	
+	'''
+	recieve .sft.statistics and generate tmp fa files for retmapping
+	'''
 	os.chdir(workdirRt)
 	
 	infh=open(stsfile,'r')
@@ -505,7 +495,6 @@ def reTmap(stsfile,chrxfaRt,workdirRt):
 	i=0
 	rawsamdict={}
 	for line in open(tmpsam,'r').xreadlines():
-		
 		if line.startswith('@'):
 			pass
 		else:
@@ -537,7 +526,6 @@ def reTmap(stsfile,chrxfaRt,workdirRt):
 	i=0
 	softtdict={}
 	for line in open(softtsam,'r').xreadlines():
-		
 		if line.startswith('@'):
 			pass
 		else:
@@ -554,7 +542,6 @@ def reTmap(stsfile,chrxfaRt,workdirRt):
 	outfh.write('info\tflag\tchr\tpos\tqual\tCIGAR\traw_seq\tseq_qual\ttotal_soft_ratio\thead_soft_ratio\thead_soft_seq\ttail_soft_ratio\ttail_soft_seq\trp1\trp2\trp3\trp4\trp5\tsh1\tsh2\tsh3\tsh4\tsh5\tst1\tst2\tst3\tst4\tst5\n')
 	i=0
 	for line in infh.xreadlines():
-		
 		i+=1
 		# print(line+"\t%s\t%s\t%s\n" % ('\t'.join(rawsamdict[i]), '\t'.join(softhdict[i]), '\t'.join(softtdict[i])))
 		try:
@@ -694,9 +681,6 @@ def classifier(filenameClas,gap=50):
 	nodear=[]
 	xpar=[]
 	
-	# center=node(0,0,0)
-	# cind=0
-	
 	for line in infh.xreadlines():
 		linear=line.strip().split('\t')
 		newnode=node(linear[0],linear[1],linear[2])
@@ -706,7 +690,6 @@ def classifier(filenameClas,gap=50):
 	infh.close()
 	
 	commonxpar=Counter(xpar).most_common()
-	
 	rawPosreshFh=open(rawname,'r')
 	
 	ind=1
@@ -721,10 +704,6 @@ def classifier(filenameClas,gap=50):
 	clsind=1
 	for candxpar in commonxpar:
 		tmpnodear=[i for i in nodear if i.xp==candxpar[0]]
-		# tmpypar=[i.yp for i in tmpnodear]
-		# tmpxpar=[i.xp for i in tmpnodear]
-		# candyp=Counter(tmpypar).most_common(1)[0][0]
-		# xpct=Counter(tmpxpar).most_common(1)[0]
 		candxar=[i.x for i in tmpnodear]
 		candx=Counter(candxar).most_common(1)[0][0]
 		
@@ -740,11 +719,12 @@ def classifier(filenameClas,gap=50):
 		clsind+=1
 		
 	outfh.close()
-		
 	
-# get classifier center using median axis
 	
 def getMedian(filenameGm):
+	'''
+	get classifier center using median axis
+	'''
 	infh=open(filenameGm,'r')
 	outfh=open(filenameGm+'.InfoSum','w')
 	
@@ -837,13 +817,8 @@ def getRegionInfo(start,stop,dmdDct):
 			exon2=key
 		
 	return exon1+'__'+exon2
-	
-
 
 # mainExec(filename='IonXpress_006_rawlib.basecaller.chrX.sorted.sam.sft.statistics.retmapped')
-
-
-	
 
 # def sumDept(stt,end,dct):
 	
